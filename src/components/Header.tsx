@@ -1,6 +1,7 @@
 import { KayaCatHeader } from './KayaCat';
+import { formatClock } from '../lib/format';
 
-export function Header({ onAvatarClick }: { onAvatarClick: () => void }) {
+export function Header({ now, onAvatarClick }: { now: Date; onAvatarClick: () => void }) {
   return (
     <div className="app-header">
       <div className="logo">EAT THIS.</div>
@@ -11,7 +12,8 @@ export function Header({ onAvatarClick }: { onAvatarClick: () => void }) {
             <path d="M6 0.8v1.4M6 9.8v1.4M0.8 6h1.4M9.8 6h1.4" />
           </g>
         </svg>
-        <div>12:15 · 33°</div>
+        {/* Time is real (state.now); 33° is a placeholder — weather is out of scope. */}
+        <div>{formatClock(now)} · 33°</div>
       </div>
       <KayaCatHeader onClick={onAvatarClick} />
     </div>

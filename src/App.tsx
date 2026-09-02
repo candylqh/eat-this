@@ -16,7 +16,7 @@ function Screens() {
 
   return (
     <div className="app">
-      <Header onAvatarClick={() => go('avatar')} />
+      <Header now={state.now} onAvatarClick={() => go('avatar')} />
       {state.screen === 'budget' && <Budget />}
       {state.screen === 'suggestion' && <Suggestion />}
       {state.screen === 'feasibility' && <Feasibility />}

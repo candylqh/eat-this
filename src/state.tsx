@@ -1,4 +1,12 @@
 import { createContext, useContext, useMemo, useReducer, type ReactNode } from 'react';
+import { STALLS, type Stall } from './data/seedStalls';
+import {
+  computeFeasibility,
+  pickSuggestion,
+  pickReplacement,
+  type FeasibilityResult,
+  type SwapReason,
+} from './lib/feasibility';
 
 export type Screen =
   | 'budget'
@@ -12,13 +20,21 @@ export type Screen =
   | 'add'
   | 'avatar';
 
-export type SwapReason = 'far' | 'hot' | 'mood';
+export type { SwapReason };
 export type Outcome = 'went' | 'missed';
 export type AccessoryKey = 'hat' | 'scarf' | 'specs';
 
 interface State {
   screen: Screen;
-  reason: SwapReason;
+  /** Round-trip time budget picked on the Budget screen, in minutes. */
+  budgetMin: number;
+  /** "Now" for this lunch session — captured once when the budget is picked. */
+  now: Date;
+  /** Placeholder calendar commitment — a mock "next meeting," now + budgetMin. */
+  nextCommitmentAt: Date;
+  currentStallId: string;
+  declinedStallIds: string[];
+  lastReason: SwapReason | null;
   outcome: Outcome;
   chip: number;
   credits: number;
@@ -26,18 +42,34 @@ interface State {
   worn: Record<AccessoryKey, boolean>;
 }
 
-const initialState: State = {
-  screen: 'budget',
-  reason: 'far',
-  outcome: 'went',
-  chip: 1,
-  credits: 14,
-  owned: { hat: true, scarf: false, specs: false },
-  worn: { hat: true, scarf: false, specs: false },
-};
+export function getStallById(id: string): Stall {
+  const stall = STALLS.find((s) => s.id === id);
+  if (!stall) throw new Error(`Unknown stall id: ${id}`);
+  return stall;
+}
+
+function freshLunchFields(budgetMin: number) {
+  const now = new Date();
+  const nextCommitmentAt = new Date(now.getTime() + budgetMin * 60000);
+  const currentStallId = pickSuggestion(STALLS, nextCommitmentAt, now).stall.id;
+  return { budgetMin, now, nextCommitmentAt, currentStallId, declinedStallIds: [] as string[], lastReason: null as SwapReason | null };
+}
+
+function createInitialState(): State {
+  return {
+    screen: 'budget',
+    ...freshLunchFields(30),
+    outcome: 'went',
+    chip: 1,
+    credits: 14,
+    owned: { hat: true, scarf: false, specs: false },
+    worn: { hat: true, scarf: false, specs: false },
+  };
+}
 
 type Action =
   | { type: 'go'; screen: Screen }
+  | { type: 'pickBudget'; budgetMin: number }
   | { type: 'swap'; reason: SwapReason }
   | { type: 'pickChip'; chip: number }
   | { type: 'buy'; key: AccessoryKey; cost: number }
@@ -50,8 +82,19 @@ function reducer(state: State, action: Action): State {
   switch (action.type) {
     case 'go':
       return { ...state, screen: action.screen };
-    case 'swap':
-      return { ...state, reason: action.reason, screen: 'replacement' };
+    case 'pickBudget':
+      return { ...state, ...freshLunchFields(action.budgetMin), screen: 'suggestion' };
+    case 'swap': {
+      const current = computeFeasibility(getStallById(state.currentStallId), state.nextCommitmentAt, state.now);
+      const replacement = pickReplacement(STALLS, action.reason, current, state.nextCommitmentAt, state.now);
+      return {
+        ...state,
+        currentStallId: replacement.stall.id,
+        declinedStallIds: [...state.declinedStallIds, state.currentStallId],
+        lastReason: action.reason,
+        screen: 'replacement',
+      };
+    }
     case 'pickChip':
       return { ...state, chip: action.chip };
     case 'buy': {
@@ -86,7 +129,10 @@ function reducer(state: State, action: Action): State {
 
 interface Ctx {
   state: State;
+  /** Real, computed feasibility for whichever stall is currently suggested. */
+  currentResult: FeasibilityResult;
   go: (screen: Screen) => void;
+  pickBudget: (budgetMin: number) => void;
   swap: (reason: SwapReason) => void;
   pickChip: (chip: number) => void;
   buy: (key: AccessoryKey, cost: number) => void;
@@ -103,12 +149,15 @@ interface Ctx {
 const AppContext = createContext<Ctx | null>(null);
 
 export function AppProvider({ children }: { children: ReactNode }) {
-  const [state, dispatch] = useReducer(reducer, initialState);
+  const [state, dispatch] = useReducer(reducer, undefined, createInitialState);
 
-  const value = useMemo<Ctx>(
-    () => ({
+  const value = useMemo<Ctx>(() => {
+    const currentResult = computeFeasibility(getStallById(state.currentStallId), state.nextCommitmentAt, state.now);
+    return {
       state,
+      currentResult,
       go: (screen) => dispatch({ type: 'go', screen }),
+      pickBudget: (budgetMin) => dispatch({ type: 'pickBudget', budgetMin }),
       swap: (reason) => dispatch({ type: 'swap', reason }),
       pickChip: (chip) => dispatch({ type: 'pickChip', chip }),
       buy: (key, cost) => dispatch({ type: 'buy', key, cost }),
@@ -120,9 +169,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
       decline: () => dispatch({ type: 'go', screen: 'declined' }),
       back: () => dispatch({ type: 'go', screen: 'suggestion' }),
       restart: () => dispatch({ type: 'go', screen: 'budget' }),
-    }),
-    [state],
-  );
+    };
+  }, [state]);
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
 }
@@ -133,21 +181,12 @@ export function useApp() {
   return ctx;
 }
 
-export const SWAPS: Record<SwapReason, { tag: string; reason: string }> = {
-  far: {
-    tag: 'Closer than Amoy',
-    reason: 'Four minutes each way instead of six, and the last two are under the covered link.',
-  },
-  hot: {
-    tag: 'Air-conditioned',
-    reason:
-      'Same four-minute walk, but you eat in air-con — the fan-cooled floor is the one you turned down.',
-  },
-  mood: {
-    tag: 'Not chicken rice',
-    reason: 'Noodles instead, and nothing on this plate resembles what you just declined.',
-  },
-};
+/** Short label for the "Instead" pill on the replacement screen. */
+export function swapTagLabel(reason: SwapReason): string {
+  if (reason === 'far') return 'Closer';
+  if (reason === 'hot') return 'Air-conditioned';
+  return 'Different dish';
+}
 
 export function shopButtonState(state: State, key: AccessoryKey, cost: number) {
   const owned = state.owned[key];

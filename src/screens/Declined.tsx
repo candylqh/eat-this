@@ -13,11 +13,12 @@ function ReasonButton({ onClick, icon, title, subtitle }: { onClick: () => void;
 }
 
 export function Declined() {
-  const { back, swap } = useApp();
+  const { currentResult, back, swap } = useApp();
+  const { stall, walkOutMin } = currentResult;
 
   return (
     <div className="screen" style={{ padding: '20px 20px 22px', gap: 14 }}>
-      <button type="button" onClick={back} className="btn-back">← Amoy Street 01-32</button>
+      <button type="button" onClick={back} className="btn-back">← {stall.centreName} {stall.unit}</button>
 
       <div className="display" style={{ fontSize: 40, lineHeight: 0.94 }}>
         WHAT&rsquo;S OFF
@@ -28,7 +29,7 @@ export function Declined() {
       <ReasonButton
         onClick={() => swap('far')}
         title="Too far"
-        subtitle="six minutes is more than I want"
+        subtitle={`${walkOutMin} minute${walkOutMin === 1 ? '' : 's'} is more than I want`}
         icon={
           <svg width="34" height="34" viewBox="0 0 24 24" style={{ flexShrink: 0 }} aria-hidden="true">
             <path d="M3 12h13M12 6.5l6 5.5-6 5.5" fill="none" stroke="#0F172A" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" />
@@ -54,7 +55,7 @@ export function Declined() {
       <ReasonButton
         onClick={() => swap('mood')}
         title="Not feeling it"
-        subtitle="chicken rice, not today"
+        subtitle={`${stall.signatureDish}, not today`}
         icon={
           <svg width="34" height="34" viewBox="0 0 24 24" style={{ flexShrink: 0 }} aria-hidden="true">
             <circle cx="12" cy="12" r="9" fill="#FBE0B6" stroke="#0F172A" strokeWidth="2.2" />

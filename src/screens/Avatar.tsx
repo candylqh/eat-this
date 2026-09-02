@@ -1,6 +1,7 @@
 import { useApp, shopButtonState, type AccessoryKey } from '../state';
 import { KayaCatAvatar } from '../components/KayaCat';
 import { CoinIcon } from '../components/icons';
+import { STALLS } from '../data/seedStalls';
 
 interface ShopItem {
   key: AccessoryKey;
@@ -69,8 +70,10 @@ export function Avatar() {
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8, paddingLeft: 12, borderLeft: '3px solid #F0D9B0' }}>
-          <div style={{ fontSize: 14, lineHeight: 1.45 }}>Three credits for the queue read at Amoy 01-32.</div>
-          <div style={{ fontSize: 14, lineHeight: 1.45 }}>Five for adding Golden Shoe 02-14 before anyone else.</div>
+          <div style={{ fontSize: 14, lineHeight: 1.45 }}>
+            Three credits for the queue read at {STALLS[0].centreName} {STALLS[0].unit}.
+          </div>
+          <div style={{ fontSize: 14, lineHeight: 1.45 }}>Five for adding a new stall before anyone else.</div>
         </div>
 
         <div className="eyebrow">Spend them</div>

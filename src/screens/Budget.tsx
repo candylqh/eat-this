@@ -1,14 +1,14 @@
 import { useApp } from '../state';
 
 export function Budget() {
-  const { go } = useApp();
+  const { pickBudget } = useApp();
   return (
     <div className="screen" style={{ padding: '26px 20px 24px', gap: 14 }}>
       <div style={{ fontSize: 19, lineHeight: 1.35, color: '#6B5A42' }}>How much time have you got?</div>
 
       <button
         type="button"
-        onClick={() => go('suggestion')}
+        onClick={() => pickBudget(30)}
         className="budget-card quick"
       >
         <div style={{ position: 'absolute', top: 16, right: 16 }}>
@@ -32,7 +32,7 @@ export function Budget() {
 
       <button
         type="button"
-        onClick={() => go('suggestion')}
+        onClick={() => pickBudget(60)}
         className="budget-card open"
       >
         <div style={{ position: 'absolute', top: 16, right: 16 }}>

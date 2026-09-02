@@ -1,3 +1,13 @@
+/**
+ * Only two hand-drawn dish stickers exist (chicken rice / noodles), so this
+ * picks whichever reads closer for a given stall — decorative, not a claim
+ * about the exact dish.
+ */
+export function DishIcon({ signatureDish }: { signatureDish: string }) {
+  const isNoodleLike = /noodle|mee|kway|bee hoon|beehoon|bee hoon|mian/i.test(signatureDish);
+  return isNoodleLike ? <NoodleDish /> : <ChickenRiceDish />;
+}
+
 export function CoinIcon({ size = 26 }: { size?: number }) {
   return (
     <svg width={size} height={size} viewBox="0 0 28 28" style={{ flexShrink: 0 }} aria-hidden="true">
