@@ -12,11 +12,11 @@ import { AddStall } from './screens/AddStall';
 import { Avatar } from './screens/Avatar';
 
 function Screens() {
-  const { state, go } = useApp();
+  const { state, go, restart } = useApp();
 
   return (
     <div className="app">
-      <Header now={state.now} onAvatarClick={() => go('avatar')} />
+      <Header now={state.now} onLogoClick={restart} onAvatarClick={() => go('avatar')} />
       {state.screen === 'budget' && <Budget />}
       {state.screen === 'suggestion' && <Suggestion />}
       {state.screen === 'feasibility' && <Feasibility />}

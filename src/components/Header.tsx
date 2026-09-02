@@ -1,10 +1,12 @@
 import { KayaCatHeader } from './KayaCat';
 import { formatClock } from '../lib/format';
 
-export function Header({ now, onAvatarClick }: { now: Date; onAvatarClick: () => void }) {
+export function Header({ now, onLogoClick, onAvatarClick }: { now: Date; onLogoClick: () => void; onAvatarClick: () => void }) {
   return (
     <div className="app-header">
-      <div className="logo">EAT THIS.</div>
+      <button type="button" onClick={onLogoClick} className="logo logo-btn" aria-label="Back to home">
+        EAT THIS.
+      </button>
       <div className="weather-pill">
         <svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true">
           <circle cx="6" cy="6" r="3.2" fill="#F59E0B" />
