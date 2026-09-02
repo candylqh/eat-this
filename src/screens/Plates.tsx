@@ -16,8 +16,8 @@ function PlateCell({ name, unit, date, Sticker }: { name: string; unit: string; 
   return (
     <div className="plate-cell filled">
       <Sticker />
-      <div style={{ textAlign: 'center', fontSize: 12, fontWeight: 600, lineHeight: 1.3, whiteSpace: 'nowrap' }}>{name}</div>
-      <div className="mono" style={{ fontSize: 11, whiteSpace: 'nowrap' }}>{unit}</div>
+      <div style={{ textAlign: 'center', fontSize: 12, fontWeight: 600, lineHeight: 1.3, width: '100%', overflowWrap: 'break-word' }}>{name}</div>
+      <div className="mono" style={{ fontSize: 11, width: '100%', textAlign: 'center', overflowWrap: 'break-word' }}>{unit}</div>
       <div className="mono" style={{ fontSize: 9.5, color: '#6E5C41' }}>{date}</div>
     </div>
   );
